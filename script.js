@@ -31,7 +31,7 @@ window.addEventListener("scroll", () => {
   toTop.hidden = window.scrollY < 700;
 }, { passive: true });
 
-toTop.addEventListener("click", () => window.scrollTo({ top: 0, behavior: "smooth" }));
+toTop.addEventListener("click", () => window.scrollTo(0, 0));
 
 /* Dropdown submenus (click/tap; hover also works on desktop via CSS) */
 function closeSubs(except) {
