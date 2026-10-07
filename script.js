@@ -10,7 +10,9 @@ const CONFIG = {
   web3formsKey: "YOUR_WEB3FORMS_ACCESS_KEY",
 };
 
-const $ = (sel, root = document) => root.querySelector(sel);
+// Pages share one script, so a missing element returns a harmless dummy instead of null
+const NULL_EL = document.createElement("div");
+const $ = (sel, root = document) => root.querySelector(sel) || NULL_EL;
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 const waLink = (text) => `https://wa.me/${CONFIG.whatsapp}?text=${encodeURIComponent(text)}`;
 const inr = (n) => "₹" + Math.round(n).toLocaleString("en-IN");
@@ -463,12 +465,10 @@ $$(".service").forEach((card) => {
            <h4>Documents usually needed</h4><ul>${d.docs.map((x) => `<li>${x}</li>`).join("")}</ul>
            <p><small>Exact requirements depend on your case. Message us and we will confirm.</small></p>`
   };
-  const btn = document.createElement("button");
-  btn.type = "button";
-  btn.className = "link-blue details-btn";
-  btn.innerHTML = 'View details <svg class="i"><use href="#i-arrow"/></svg>';
-  btn.addEventListener("click", () => openArticle(key));
-  card.appendChild(btn);
+  const box = document.createElement("div");
+  box.className = "svc-detail";
+  box.innerHTML = ARTICLES[key].html;
+  card.insertBefore(box, $("a.link-blue", card));
 });
 
 /* =========================================================
@@ -484,3 +484,27 @@ if (GALLERY.length) {
   $("#gallery").hidden = false;
   $("#navGallery").hidden = false;
 }
+
+
+/* =========================================================
+   MULTI-PAGE: inline articles, privacy page, active menu link
+   ========================================================= */
+const articleList = $("#articleList");
+if (articleList.isConnected) {
+  ["regime", "gst", "structure"].forEach((k) => {
+    const a = ARTICLES[k];
+    articleList.insertAdjacentHTML("beforeend",
+      `<article class="card long-article" id="${k}"><h2>${a.title}</h2>${a.html}<a class="btn btn-wa" href="${waLink(a.wa)}" target="_blank" rel="noopener"><svg class="i"><use href="#i-whatsapp"/></svg> Ask us about this</a></article>`);
+  });
+}
+const policyBody = $("#policyBody");
+if (policyBody.isConnected) policyBody.innerHTML = ARTICLES.privacy.html;
+
+const here = (location.pathname.split("/").pop() || "index.html");
+$$(".menu a[href]").forEach((a) => {
+  const href = a.getAttribute("href");
+  if (href === here) a.setAttribute("aria-current", "page");
+});
+$$(".has-sub").forEach((li) => {
+  if (here !== "index.html" && $$(".sub a", li).some((a) => a.getAttribute("href").split("#")[0] === here)) $(".sub-toggle", li).classList.add("current");
+});
